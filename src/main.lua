@@ -1,3 +1,5 @@
+local signals = assert(require "hump.signal")
+local sounds = assert(require "sounds")
 local app = assert(require "billiard")
 
 
@@ -6,12 +8,15 @@ function love.load()
     love.mouse.setVisible(false)
     app.board = love.graphics.newImage("images/board.jpg")
     app.cue = love.graphics.newImage("images/cue.png")
-    app.sounds.cue_hits_ball = love.audio.newSource("resources/cue-hits-ball.wav", "static")
-    app.sounds.white_hit = love.audio.newSource("resources/white-hit.wav", "static")
-    app.sounds.ball_hits_ball = love.audio.newSource("resources/ball-hits-ball.wav", "static")
-    app.sounds.ball_touches_border = love.audio.newSource("resources/ball-touches-border.wav", "static")
-    app.sounds.ball_in_hole = love.audio.newSource("resources/ball-in-hole.wav", "static")
+    app.signals = signals
+    sounds.load()
     app.load()
+
+    signals.register("shoot", sounds.shot)
+    signals.register("shoot", app.shot)
+    signals.register("ball-in-hole", sounds.score)
+    signals.register("ball-in-hole", app.doscore)
+    signals.register("collision", sounds.collision)
 end
 
 
@@ -42,13 +47,13 @@ end
 
 ------------------------------------------------------------------------
 function love.keypressed(key, isrepeat)
-    if key == " " then app.shot() end
+    if key == " " and not app.rolling then signals.emit("shoot") end
 end
 
 
 ------------------------------------------------------------------------
 function love.mousepressed(x, y, button)
-    if button == "l" then app.shot() end
+    if button == "l" and not app.rolling then signals.emit("shoot") end
 end
 
 

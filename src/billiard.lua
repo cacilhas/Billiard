@@ -1,3 +1,6 @@
+local signals = assert(require "hump.signal")
+local vector = assert(require "hump.vector-light")
+
 local app = {
     _VERSION = "1.0",
     _DESCRIPTION = "Billiard",
@@ -8,22 +11,22 @@ local app = {
     borders = {},
     balls = {},
     startpos = {x=622, y=211},
-    sounds = {},
     score = 0,
     max_force = 120,
     friction = 180,
+    minvelocity = 600,
     force = 100,
     rotation = 0,
     rolling = false,
     firsthit = true,
-    score = 0,
     cuedist = {
         dist = 0,
         dir = 6,
     },
 }
 
-local calculaterotation, loadborders, loadballs, ishole, getfriction, nantozero, collision
+local calculaterotation, loadborders, loadballs, ishole, getfriction,
+      nantozero, collision, applyfriction
 
 
 ------------------------------------------------------------------------
@@ -40,48 +43,15 @@ function app.update(dt)
     app.world:update(dt)
     app.rotation = calculaterotation()
 
-    local aux = {}
     app.rolling = false
+    local survivors = {}
     table.foreach(app.balls, function(name, ball)
-        local x, y
-
-        if ball.body:isAwake() then
-            -- Friction
-            x, y = ball.body:getLinearVelocity()
-            x, y = getfriction(x, y, app.friction * dt)
-            ball.body:applyForce(x, y)
-
-            x, y = ball.body:getLinearVelocity()
-            x, y = nantozero(x), nantozero(y)
-            if (x * x) + (y * y) < 600 then
-                ball.body:setAwake(false)
-            else
-                app.rolling = true
-            end
-        end
-
-        x, y = ball.body:getPosition()
-        if name == "white" then
-            aux.white = ball
-            if ishole(x, y) then
-                app.sounds.ball_in_hole:play()
-                app.score = 0
-                ball.body:setAwake(false)
-                ball.body:setPosition(app.startpos.x, app.startpos.y)
-            end
-
-        else
-            if ishole(x, y) then
-                app.score = app.score + 1
-                ball.fixture:destroy()
-                ball.body:destroy()
-                app.sounds.ball_in_hole:play()
-            else
-                table.insert(aux, ball)
-            end
-        end
+        if ball.body:isAwake() then applyfriction(ball, dt) end
+        local x, y = ball.body:getPosition()
+        if ishole(x, y) then signals.emit("ball-in-hole", ball) end
+        if ball.fixture then survivors[name] = ball end
     end)
-    app.balls = aux
+    app.balls = survivors
 end
 
 
@@ -92,6 +62,38 @@ function app.draw()
         love.graphics.setColor(ball.color)
         love.graphics.circle("fill", x, y, ball.shape:getRadius())
     end)
+end
+
+
+------------------------------------------------------------------------
+function app.doscore(ball)
+    if ball == app.balls.white then
+        app.score = 0
+        ball.body:setAwake(false)
+        ball.body:setPosition(app.startpos.x, app.startpos.y)
+    else
+        app.score = app.score + 1
+        ball.fixture:destroy()
+        ball.body:destroy()
+        ball.fixture = nil
+    end
+end
+
+
+------------------------------------------------------------------------
+function applyfriction(ball, dt)
+    -- Friction
+    local x, y = ball.body:getLinearVelocity()
+    x, y = getfriction(x, y, app.friction * dt)
+    ball.body:applyForce(x, y)
+
+    x, y = ball.body:getLinearVelocity()
+    x, y = nantozero(x), nantozero(y)
+    if (x * x) + (y * y) < app.minvelocity then
+        ball.body:setAwake(false)
+    else
+        app.rolling = true
+    end
 end
 
 
@@ -199,7 +201,6 @@ end
 ------------------------------------------------------------------------
 function app.shot()
     if not app.rolling then
-        app.sounds.cue_hits_ball:play()
         local force = app.force * app.max_force
         local angle = math.rad((180 + app.rotation) % 360)
 
@@ -241,13 +242,11 @@ end
 
 ------------------------------------------------------------------------
 function calculaterotation()
-    local x, y, mx, my, bx, by, c, angle
+    local mx, my, bx, by, angle
     mx, my = love.mouse.getPosition()
     bx, by = app.balls.white.body:getPosition()
-    x, y = bx - mx, my - by
-    c = math.sqrt((x * x) + (y * y))
-    angle = math.asin(y / c)
-
+    -- Inverted by-my ’cause of y-axis inversion
+    angle = vector.angleTo(bx, my, mx, by)
     return angle * 90 * math.pi
 end
 
@@ -257,12 +256,12 @@ function collision(a, b, coll)
     if a:getUserData() == "ball" and b:getUserData() == "ball" then
         if app.firsthit and (a == app.balls.white.fixtures or b == app.balls.white.fixtures) then
             app.firsthit = false
-            app.sounds.white_hit:play()
+            signals.emit("collision", "white-hit")
         else
-            app.sounds.ball_hits_ball:play()
+            signals.emit("collision")
         end
     else
-        app.sounds.ball_touches_border:play()
+        signals.emit("collision", "ball-touches-border")
     end
 end
 
