@@ -203,6 +203,7 @@ function app.shot()
     if not app.rolling then
         local force = app.force * app.max_force
         local angle = math.rad((180 + app.rotation) % 360)
+        app.firsthit = true
 
         app.balls.white.body:applyForce(
             math.cos(angle) * force,
@@ -253,16 +254,15 @@ end
 
 ------------------------------------------------------------------------
 function collision(a, b, coll)
+    local colsig = "ball-touches-border"
     if a:getUserData() == "ball" and b:getUserData() == "ball" then
-        if app.firsthit and (a == app.balls.white.fixtures or b == app.balls.white.fixtures) then
+        colsig = nil
+        if app.firsthit and ((a == app.balls.white.fixture) or (b == app.balls.white.fixture)) then
             app.firsthit = false
-            signals.emit("collision", "white-hit")
-        else
-            signals.emit("collision")
+            colsig = "white-hit"
         end
-    else
-        signals.emit("collision", "ball-touches-border")
     end
+    signals.emit("collision", colsig)
 end
 
 
