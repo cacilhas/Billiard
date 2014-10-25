@@ -241,11 +241,12 @@ end
 
 ------------------------------------------------------------------------
 function calculaterotation()
-    local mx, my = love.mouse.getPosition()
-    local bx, by = app.balls.white.body:getPosition()
-    local x, y = mx - bx, by - my
-    local c = math.sqrt((x * x) + (y * y))
-    local angle = math.asin(y / c)
+    local x, y, mx, my, bx, by, c, angle
+    mx, my = love.mouse.getPosition()
+    bx, by = app.balls.white.body:getPosition()
+    x, y = bx - mx, my - by
+    c = math.sqrt((x * x) + (y * y))
+    angle = math.asin(y / c)
 
     return angle * 90 * math.pi
 end
