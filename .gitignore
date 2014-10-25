@@ -1,0 +1,14 @@
+*~
+*.app
+*.bak
+*.exe
+*.lc
+*.love
+*.swo
+*.swp
+*.txz
+*.zip
+.DS_Store
+.env
+.idea
+tmp
