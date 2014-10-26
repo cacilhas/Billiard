@@ -54,7 +54,15 @@ end
 
 ------------------------------------------------------------------------
 function love.mousepressed(x, y, button)
-    if button == "l" and not app.rolling then signals.emit("shoot") end
+    if button == "l" and not app.rolling then
+        signals.emit("shoot")
+
+    elseif button == "wu" then
+        signals.emit("increase-force", .0625)
+
+    elseif button == "wd" then
+        signals.emit("decrease-force", .0625)
+    end
 end
 
 
