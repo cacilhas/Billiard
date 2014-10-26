@@ -114,10 +114,10 @@ function love.draw()
         love.graphics.setFont(gameoverfont)
         love.graphics.print("Game Over", 272, 166)
     end
+    love.graphics.setColor(0xff, 0xff, 0xff)
 
     -- Draw pointer
     if not app.rolling then
-        love.graphics.setColor(0xff, 0xff, 0xff)
         x, y = love.mouse.getPosition()
         love.graphics.draw(pointer, x - 13, y - 13)
     end

@@ -50,11 +50,11 @@ function app.update(dt)
         if ball.fixture then survivors[name] = ball end
     end)
     app.balls = survivors
+    if table.maxn(survivors) == 0 then signals.emit("game-over") end
     if internals.firsthit and not app.rolling then
         app.score = 0
         internals.firsthit = false
     end
-    if #app.balls == 0 then signals.emit("game-over") end
 end
 
 
