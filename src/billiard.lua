@@ -5,7 +5,7 @@ local app = {
     _VERSION = "1.0",
     _DESCRIPTION = "Billiard",
     _AUTHOR = "ℜodrigo ℭacilhας <batalema@cacilhas.info>",
-    _URL = "",
+    _URL = "https://bitbucket.org/cacilhas/billiard/",
     _LICENSE = "BSD-3 Clausule",
 
     balls = {},
