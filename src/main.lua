@@ -2,7 +2,7 @@ local signals = assert(require "hump.signal")
 local sounds = assert(require "sounds")
 local app = assert(require "billiard")
 local cue = {dist = 0, dir = 6}
-local board, pointer
+local board, pointer, font
 
 
 ------------------------------------------------------------------------
@@ -11,6 +11,7 @@ function love.load()
     board = love.graphics.newImage("images/board.jpg")
     cue.img = love.graphics.newImage("images/cue.png")
     pointer = love.graphics.newImage("images/pointer.png")
+    font = love.graphics.newFont("resources/PlantagenetCherokee.ttf", 24)
     sounds.load()
     app.load()
 
@@ -98,6 +99,7 @@ function love.draw()
 
     -- Draw score
     love.graphics.setColor(0xff, 0xff, 0xff)
+    love.graphics.setFont(font)
     love.graphics.print("Score: " .. app.score, 300, 432)
 
     -- Draw pointer
