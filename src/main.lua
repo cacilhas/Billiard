@@ -6,12 +6,13 @@ local cue = {
     dist = 0,
     dir = 6,
 }
+local board
 
 
 ------------------------------------------------------------------------
 function love.load()
     love.mouse.setVisible(false)
-    app.board = love.graphics.newImage("images/board.jpg")
+    board = love.graphics.newImage("images/board.jpg")
     cue.img = love.graphics.newImage("images/cue.png")
     sounds.load()
     app.load()
@@ -63,7 +64,7 @@ end
 ------------------------------------------------------------------------
 function love.draw()
     -- Draw board
-    love.graphics.draw(app.board, 0, 0)
+    love.graphics.draw(board, 0, 0)
 
     -- Draw balls
     app.draw()

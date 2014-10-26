@@ -8,7 +8,6 @@ local app = {
     _URL = "",
     _LICENSE = "BSD-3 Clausule",
 
-    board = nil, -- set by love.load
     balls = {},
     score = 0,
     rotation = 0,
