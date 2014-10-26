@@ -2,7 +2,7 @@ local signals = assert(require "hump.signal")
 local sounds = assert(require "sounds")
 local app = assert(require "billiard")
 local cue = {dist = 0, dir = 6}
-local board
+local board, pointer
 
 
 ------------------------------------------------------------------------
@@ -10,6 +10,7 @@ function love.load()
     love.mouse.setVisible(false)
     board = love.graphics.newImage("images/board.jpg")
     cue.img = love.graphics.newImage("images/cue.png")
+    pointer = love.graphics.newImage("images/pointer.png")
     sounds.load()
     app.load()
 
@@ -59,6 +60,8 @@ end
 
 ------------------------------------------------------------------------
 function love.draw()
+    local x, y
+
     -- Draw board
     love.graphics.draw(board, 0, 0)
 
@@ -68,7 +71,7 @@ function love.draw()
     -- Draw cue
     if not app.rolling then
         love.graphics.setColor(0xff, 0xff, 0xff)
-        local x, y = app.balls.white.body:getPosition()
+        x, y = app.balls.white.body:getPosition()
         love.graphics.draw(
             cue.img, x, y,
             math.rad(app.rotation),
@@ -88,4 +91,10 @@ function love.draw()
     -- Draw score
     love.graphics.setColor(0xff, 0xff, 0xff)
     love.graphics.print("Score: " .. app.score, 300, 432)
+
+    -- Draw pointer
+    if not app.rolling then
+        x, y = love.mouse.getPosition()
+        love.graphics.draw(pointer, x - 13, y - 13)
+    end
 end

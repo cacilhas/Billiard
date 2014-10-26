@@ -23,7 +23,7 @@ local internals = {
     minvelocity = 600,
     force = 100,
     deltaforce = 50, -- percentual per second
-    firsthit = true,
+    firsthit = false,
 }
 
 
@@ -50,6 +50,10 @@ function app.update(dt)
         if ball.fixture then survivors[name] = ball end
     end)
     app.balls = survivors
+    if internals.firsthit and not app.rolling then
+        app.score = 0
+        internals.firsthit = false
+    end
 end
 
 
@@ -267,9 +271,8 @@ function internals.calculaterotation()
     local mx, my, bx, by, angle
     mx, my = love.mouse.getPosition()
     bx, by = app.balls.white.body:getPosition()
-    -- Inverted by-my ’cause of y-axis inversion
-    angle = vector.angleTo(bx, my, mx, by)
-    return angle * 90 * math.pi
+    angle = vector.angleTo(bx - mx, by - my)
+    return angle * 180 / math.pi
 end
 
 
