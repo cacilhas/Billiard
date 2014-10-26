@@ -1,8 +1,10 @@
 local signals = assert(require "hump.signal")
 local sounds = assert(require "sounds")
 local app = assert(require "billiard")
-local cue = {dist = 0, dir = 6}
-local board, pointer, font
+local cue = {dist = 0, dir = 6 }
+local shotcount = 0
+local gameover = false
+local board, pointer, font, gameoverfont
 
 
 ------------------------------------------------------------------------
@@ -12,22 +14,26 @@ function love.load()
     cue.img = love.graphics.newImage("images/cue.png")
     pointer = love.graphics.newImage("images/pointer.png")
     font = love.graphics.newFont("resources/PlantagenetCherokee.ttf", 24)
+    gameoverfont = love.graphics.newFont("resources/brasil-new.ttf", 64)
     sounds.load()
     app.load()
 
     signals.register("shoot", sounds.shot)
     signals.register("shoot", app.shot)
+    signals.register("shoot", function() shotcount = shotcount + 1 end)
     signals.register("increase-force", app.increaseforce)
     signals.register("decrease-force", app.decreaseforce)
     signals.register("ball-in-hole", sounds.score)
     signals.register("ball-in-hole", app.doscore)
     signals.register("collision", sounds.collision)
+    signals.register("game-over", function() gameover = true end)
 end
 
 
 ------------------------------------------------------------------------
 function love.update(dt)
     app.update(dt)
+    if gameover then return end
 
     if love.keyboard.isDown("up") or love.keyboard.isDown("right") then
         signals.emit("increase-force", dt)
@@ -49,13 +55,13 @@ end
 
 ------------------------------------------------------------------------
 function love.keypressed(key, isrepeat)
-    if key == " " and not app.rolling then signals.emit("shoot") end
+    if key == " " and not (app.rolling or gameover) then signals.emit("shoot") end
 end
 
 
 ------------------------------------------------------------------------
 function love.mousepressed(x, y, button)
-    if button == "l" and not app.rolling then
+    if button == "l" and not (app.rolling or gameover) then
         signals.emit("shoot")
 
     elseif button == "wu" then
@@ -78,7 +84,7 @@ function love.draw()
     app.draw()
 
     -- Draw cue
-    if not app.rolling then
+    if not (app.rolling or gameover) then
         love.graphics.setColor(0xff, 0xff, 0xff)
         x, y = app.balls.white.body:getPosition()
         love.graphics.draw(
@@ -101,9 +107,17 @@ function love.draw()
     love.graphics.setColor(0xff, 0xff, 0xff)
     love.graphics.setFont(font)
     love.graphics.print("Score: " .. app.score, 300, 432)
+    love.graphics.print("Shots: " .. shotcount, 300, 464)
+
+    if gameover then
+        love.graphics.setColor(0xff, 0x00, 0x00)
+        love.graphics.setFont(gameoverfont)
+        love.graphics.print("Game Over", 272, 166)
+    end
 
     -- Draw pointer
     if not app.rolling then
+        love.graphics.setColor(0xff, 0xff, 0xff)
         x, y = love.mouse.getPosition()
         love.graphics.draw(pointer, x - 13, y - 13)
     end

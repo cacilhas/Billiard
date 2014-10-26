@@ -54,6 +54,7 @@ function app.update(dt)
         app.score = 0
         internals.firsthit = false
     end
+    if #app.balls == 0 then signals.emit("game-over") end
 end
 
 
