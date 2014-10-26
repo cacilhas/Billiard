@@ -1,11 +1,7 @@
 local signals = assert(require "hump.signal")
 local sounds = assert(require "sounds")
 local app = assert(require "billiard")
-local cue = {
-    img = nil, -- set by love.load
-    dist = 0,
-    dir = 6,
-}
+local cue = {dist = 0, dir = 6}
 local board
 
 
