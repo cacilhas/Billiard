@@ -19,7 +19,7 @@ local internals = {
     borders = {},
     startpos = {x=622, y=211},
     max_force = 120,
-    friction = 180,
+    friction = 200,
     minvelocity = 600,
     force = 100,
     deltaforce = 50, -- percentual per second
@@ -249,15 +249,10 @@ end
 ------------------------------------------------------------------------
 function internals.getfriction(x, y, f)
     x, y = internals.nantozero(x), internals.nantozero(y)
-    local ax = math.abs(x)
-    local ay = math.abs(y)
-    local fx = math.min(ax, f)
-    local fy = math.min(ay, f)
-
-    if ax == 0 then ax = 1 end
-    if ay == 0 then ay = 1 end
-
-    return -fx * x / ax, -fy * y / ay
+    local force = vector.len(x, y)
+    local angle = vector.angleTo(x, y) + math.pi
+    f = math.min(f, force)
+    return f * math.cos(angle), f * math.sin(angle)
 end
 
 
