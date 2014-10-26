@@ -1,0 +1,9 @@
+KNOWN BUGS:
+
+* When the white ball touches a red ball before shot, the first touch is
+  not accounted.
+
+* When any ball rolls through side border, it falls down on the lateral
+  roll.
+
+* The borders may be too large, and the holes too narrow.
