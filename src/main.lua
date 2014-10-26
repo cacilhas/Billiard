@@ -113,8 +113,9 @@ function love.draw()
         love.graphics.setColor(0xff, 0x00, 0x00)
         love.graphics.setFont(gameoverfont)
         love.graphics.print("Game Over", 272, 166)
+        love.graphics.setColor(0xff, 0xff, 0xff)
+        love.graphics.draw(cue.img, 390, 432)
     end
-    love.graphics.setColor(0xff, 0xff, 0xff)
 
     -- Draw pointer
     if not app.rolling then
