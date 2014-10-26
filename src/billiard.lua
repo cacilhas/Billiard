@@ -52,7 +52,7 @@ function app.update(dt)
     app.balls = survivors
     if table.maxn(survivors) == 0 then signals.emit("game-over") end
     if internals.firsthit and not app.rolling then
-        app.score = 0
+        app.score = math.max(0, app.score - 1)
         internals.firsthit = false
     end
 end
