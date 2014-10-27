@@ -54,28 +54,23 @@ run: $(TARGET)
 $(DIST): $(APP)
 ifeq ($(UNAME),Windows)
 	$(ZIP) $@ $<
-
 else
 	$(AR) $< | $(COMPRESS) > $@
-
 endif
 
 
 $(APP): $(TARGET) $(ICON)
 ifeq ($(UNAME),Windows)
 	$(CP) /b $(LOVE)+$< $@
-
 else
 ifeq ($(UNAME),Darwin)
 	$(CP) -r /Applications/love.app $@
 	$(RM) $@/Contents/Resources/*
 	cat Info.plist > $@/Contents/Info.plist
 	$(CP) $? $@/Contents/Resources/
-
 else
 	cat $(LOVE) $< > $@
-    chmod +x $@
-
+	chmod +x $@
 endif
 endif
 
@@ -97,8 +92,6 @@ test:
 $(TARGET):
 ifeq ($(UNAME),Windows)
 	CHDIR src ; $(ZIP) ..\$@ -r *
-
 else
 	(cd src && $(ZIP) ../$@ -r *)
-
 endif
