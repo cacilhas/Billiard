@@ -67,8 +67,8 @@ end
 
 ------------------------------------------------------------------------
 function mainstate:keyreleased(key)
-    if key == "p" then gamestate.push(pausestate) end
-    if key == "escape" then gamestate.switch(menustate) end
+    if key == "p" then gamestate.push(pausestate)
+    elseif key == "escape" then gamestate.switch(menustate) end
 end
 
 
@@ -138,7 +138,8 @@ end
 
 ------------------------------------------------------------------------
 function menustate:keyreleased(key)
-    if key == "return" then gamestate.switch(mainstate) end
+    if key == "return" then gamestate.switch(mainstate)
+    elseif key == "escape" then love.event.quit() end
 end
 
 
@@ -159,7 +160,7 @@ end
 
 ------------------------------------------------------------------------
 function pausestate:keyreleased(key)
-    if key == "p" then gamestate.pop() end
+    if key == "p" or key == "escape" then gamestate.pop() end
 end
 
 
