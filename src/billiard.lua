@@ -31,6 +31,12 @@ local internals = {
 function app.init()
     app.world = love.physics.newWorld(0, 0)
     app.world:setCallbacks(internals.collision)
+
+    signals.register("shoot", app.shot)
+    signals.register("increase-force", app.increaseforce)
+    signals.register("decrease-force", app.decreaseforce)
+    signals.register("ball-in-hole", app.doscore)
+
     internals.loadborders()
     internals.loadballs()
 end

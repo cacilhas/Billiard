@@ -1,3 +1,4 @@
+local signals = assert(require "hump.signal")
 local sounds
 
 sounds = {
@@ -7,6 +8,10 @@ sounds = {
         sounds["ball-hits-ball"] = love.audio.newSource("resources/ball-hits-ball.wav", "static")
         sounds["ball-touches-border"] = love.audio.newSource("resources/ball-touches-border.wav", "static")
         sounds["ball-in-hole"] = love.audio.newSource("resources/ball-in-hole.wav", "static")
+
+        signals.register("shoot", sounds.shot)
+        signals.register("ball-in-hole", sounds.score)
+        signals.register("collision", sounds.collision)
     end,
 
     shot = function()
