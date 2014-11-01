@@ -28,7 +28,7 @@ local internals = {
 
 
 ------------------------------------------------------------------------
-function app.load()
+function app.init()
     app.world = love.physics.newWorld(0, 0)
     app.world:setCallbacks(internals.collision)
     internals.loadborders()

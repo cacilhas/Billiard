@@ -1,3 +1,4 @@
+local gamestate = assert(require "hump.gamestate")
 local signals = assert(require "hump.signal")
 local sounds = assert(require "sounds")
 local app = assert(require "billiard")
@@ -5,6 +6,11 @@ local cue = {dist = 0, dir = 6 }
 local shotcount = 0
 local gameover = false
 local board, pointer, font, gameoverfont
+
+
+local menustate = {}
+local mainstate = {}
+local pausestate = {}
 
 
 ------------------------------------------------------------------------
@@ -15,8 +21,6 @@ function love.load()
     pointer = love.graphics.newImage("images/pointer.png")
     font = love.graphics.newFont("resources/PlantagenetCherokee.ttf", 24)
     gameoverfont = love.graphics.newFont("resources/brasil-new.ttf", 64)
-    sounds.load()
-    app.load()
 
     signals.register("shoot", sounds.shot)
     signals.register("shoot", app.shot)
@@ -27,11 +31,21 @@ function love.load()
     signals.register("ball-in-hole", app.doscore)
     signals.register("collision", sounds.collision)
     signals.register("game-over", function() gameover = true end)
+    sounds.load()
+
+    gamestate.registerEvents()
+    gamestate.switch(menustate)
 end
 
 
 ------------------------------------------------------------------------
-function love.update(dt)
+function mainstate:init()
+    app.init()
+end
+
+
+------------------------------------------------------------------------
+function mainstate:update(dt)
     app.update(dt)
     if gameover then return end
 
@@ -54,13 +68,19 @@ end
 
 
 ------------------------------------------------------------------------
-function love.keypressed(key, isrepeat)
+function mainstate:keypressed(key, isrepeat)
     if key == " " and not (app.rolling or gameover) then signals.emit("shoot") end
 end
 
 
 ------------------------------------------------------------------------
-function love.mousepressed(x, y, button)
+function mainstate:keyreleased(key)
+    if key == "p" then gamestate.push(pausestate) end
+end
+
+
+------------------------------------------------------------------------
+function mainstate:mousepressed(x, y, button)
     if button == "l" and not (app.rolling or gameover) then
         signals.emit("shoot")
 
@@ -74,7 +94,7 @@ end
 
 
 ------------------------------------------------------------------------
-function love.draw()
+function mainstate:draw()
     local x, y
 
     -- Draw board
@@ -122,4 +142,44 @@ function love.draw()
         x, y = love.mouse.getPosition()
         love.graphics.draw(pointer, x - 13, y - 13)
     end
+end
+
+
+------------------------------------------------------------------------
+function menustate:keyreleased(key)
+    if key == "return" then gamestate.switch(mainstate) end
+end
+
+
+------------------------------------------------------------------------
+function menustate:draw()
+    love.graphics.setColor(0xff, 0xff, 0xff)
+    love.graphics.draw(board, 150, 0, math.rad(20), .8, .8)
+
+    love.graphics.setColor(0xff, 0xff, 0x00)
+    love.graphics.setFont(gameoverfont)
+    love.graphics.print("Billiard", 300, 166)
+
+    love.graphics.setColor(0xff, 0xff, 0xff)
+    love.graphics.setFont(font)
+    love.graphics.print("Press Enter", 320, 300)
+end
+
+
+------------------------------------------------------------------------
+function pausestate:keyreleased(key)
+    if key == "p" then gamestate.pop() end
+end
+
+
+------------------------------------------------------------------------
+function pausestate:draw()
+    mainstate:draw()
+    love.graphics.setColor(0x00, 0x00, 0x60, 0xa0)
+    local width, height = love.window.getDimensions()
+    love.graphics.rectangle("fill", 0, 0, width, height)
+
+    love.graphics.setColor(0xff, 0xff, 0x00, 0xff)
+    love.graphics.setFont(gameoverfont)
+    love.graphics.print("Paused", 312, 166)
 end
