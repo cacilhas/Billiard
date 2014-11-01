@@ -1,7 +1,8 @@
 local signals = assert(require "hump.signal")
 local vector = assert(require "hump.vector-light")
+local class = assert(require "hump.class")
 
-local app = {
+local Billiard = class {
     _VERSION = "1.0",
     _DESCRIPTION = "Billiard",
     _AUTHOR = "ℜodrigo ℭacilhας <batalema@cacilhas.info>",
@@ -12,6 +13,8 @@ local app = {
     score = 0,
     rotation = 0,
     rolling = false,
+    firsthit = false,
+    force = 100,
 }
 
 
@@ -21,52 +24,50 @@ local internals = {
     max_force = 120,
     friction = 200,
     minvelocity = 600,
-    force = 100,
     deltaforce = 50, -- percentual per second
-    firsthit = false,
 }
 
 
 ------------------------------------------------------------------------
-function app.init()
-    app.world = love.physics.newWorld(0, 0)
-    app.world:setCallbacks(internals.collision)
+function Billiard:init()
+    self.world = love.physics.newWorld(0, 0)
+    self.world:setCallbacks(function(...) self:collision(...) end)
 
-    signals.register("shoot", app.shot)
-    signals.register("increase-force", app.increaseforce)
-    signals.register("decrease-force", app.decreaseforce)
-    signals.register("ball-in-hole", app.doscore)
+    signals.register("shoot", function(...) self:shot(...) end)
+    signals.register("increase-force", function(...) self:increaseforce(...) end)
+    signals.register("decrease-force", function(...) self:decreaseforce(...) end)
+    signals.register("ball-in-hole", function(...) self:doscore(...) end)
 
-    internals.loadborders()
-    internals.loadballs()
+    self:loadborders()
+    self:loadballs()
 end
 
 
 ------------------------------------------------------------------------
-function app.update(dt)
-    app.world:update(dt)
-    app.rotation = internals.calculaterotation()
+function Billiard:update(dt)
+    self.world:update(dt)
+    self.rotation = internals.calculaterotation()
 
-    app.rolling = false
+    self.rolling = false
     local survivors = {}
-    table.foreach(app.balls, function(name, ball)
-        if ball.body:isAwake() then internals.applyfriction(ball, dt) end
+    table.foreach(self.balls, function(name, ball)
+        if ball.body:isAwake() then self:applyfriction(ball, dt) end
         local x, y = ball.body:getPosition()
         if internals.ishole(x, y) then signals.emit("ball-in-hole", ball) end
         if ball.fixture then survivors[name] = ball end
     end)
-    app.balls = survivors
+    self.balls = survivors
     if table.maxn(survivors) == 0 then signals.emit("game-over") end
-    if internals.firsthit and not app.rolling then
-        app.score = math.max(0, app.score - 1)
-        internals.firsthit = false
+    if self.firsthit and not self.rolling then
+        self.score = math.max(0, self.score - 1)
+        self.firsthit = false
     end
 end
 
 
 ------------------------------------------------------------------------
-function app.draw()
-    table.foreach(app.balls, function(_, ball)
+function Billiard:draw()
+    table.foreach(self.balls, function(_, ball)
         local x, y = ball.body:getPosition()
         love.graphics.setColor(ball.color)
         love.graphics.circle("fill", x, y, ball.shape:getRadius())
@@ -75,13 +76,13 @@ end
 
 
 ------------------------------------------------------------------------
-function app.doscore(ball)
-    if ball == app.balls.white then
-        app.score = 0
+function Billiard:doscore(ball)
+    if ball == self.balls.white then
+        self.score = 0
         ball.body:setAwake(false)
         ball.body:setPosition(internals.startpos.x, internals.startpos.y)
     else
-        app.score = app.score + 1
+        self.score = self.score + 1
         ball.fixture:destroy()
         ball.body:destroy()
         ball.fixture = nil
@@ -90,21 +91,23 @@ end
 
 
 ------------------------------------------------------------------------
-function app.increaseforce(dt)
-    internals.force = internals.force + (internals.deltaforce * dt)
-    if internals.force > 100 then internals.force = 100 end
+function Billiard:increaseforce(dt)
+    self.force = self.force + (internals.deltaforce * dt)
+    if self.force > 100 then self.force = 100 end
 end
 
 
-function app.decreaseforce(dt)
-    internals.force = internals.force - (internals.deltaforce * dt)
-    if internals.force < 0 then internals.force = 0 end
+------------------------------------------------------------------------
+function Billiard:decreaseforce(dt)
+    self.force = self.force - (internals.deltaforce * dt)
+    if self.force < 0 then self.force = 0 end
 end
 
 
-function app.scaleforce(f)
+------------------------------------------------------------------------
+function Billiard:scaleforce(f)
     local x, b, r
-    for x = 0, math.ceil(internals.force) do
+    for x = 0, math.ceil(self.force) do
         b = 255 * (100 - x) / 100
         r = 255 * x / 100
         f(x, r, 0, b)
@@ -113,7 +116,36 @@ end
 
 
 ------------------------------------------------------------------------
-function internals.applyfriction(ball, dt)
+function Billiard:shot()
+    if not Billiard.rolling then
+        local force = self.force * internals.max_force
+        local angle = math.rad((180 + Billiard.rotation) % 360)
+        self.firsthit = true
+
+        Billiard.balls.white.body:applyForce(
+            math.cos(angle) * force,
+            math.sin(angle) * force
+        )
+    end
+end
+
+
+------------------------------------------------------------------------
+function Billiard:collision(a, b, coll)
+    local colsig = "ball-touches-border"
+    if a:getUserData() == "ball" and b:getUserData() == "ball" then
+        colsig = nil
+        if self.firsthit and ((a == Billiard.balls.white.fixture) or (b == Billiard.balls.white.fixture)) then
+            self.firsthit = false
+            colsig = "white-hit"
+        end
+    end
+    signals.emit("collision", colsig)
+end
+
+
+------------------------------------------------------------------------
+function Billiard:applyfriction(ball, dt)
     -- Friction
     local x, y = ball.body:getLinearVelocity()
     x, y = internals.getfriction(x, y, internals.friction * dt)
@@ -124,22 +156,22 @@ function internals.applyfriction(ball, dt)
     if (x * x) + (y * y) < internals.minvelocity then
         ball.body:setAwake(false)
     else
-        app.rolling = true
+        self.rolling = true
     end
 end
 
 
 ------------------------------------------------------------------------
-function internals.loadborders()
+function Billiard:loadborders()
     internals.borders.upleft = {
-        body = love.physics.newBody(app.world, 200, 6, "static"),
+        body = love.physics.newBody(self.world, 200, 6, "static"),
         shape = love.physics.newRectangleShape(378, 12),
     }
     internals.borders.upleft.fixture = love.physics.newFixture(
         internals.borders.upleft.body, internals.borders.upleft.shape
     )
     internals.borders.upright = {
-        body = love.physics.newBody(app.world, 600, 6, "static"),
+        body = love.physics.newBody(self.world, 600, 6, "static"),
         shape = love.physics.newRectangleShape(378, 12),
     }
     internals.borders.upright.fixture = love.physics.newFixture(
@@ -147,14 +179,14 @@ function internals.loadborders()
     )
 
     internals.borders.downleft = {
-        body = love.physics.newBody(app.world, 200, 416, "static"),
+        body = love.physics.newBody(self.world, 200, 416, "static"),
         shape = love.physics.newRectangleShape(378, 12),
     }
     internals.borders.downleft.fixture = love.physics.newFixture(
         internals.borders.downleft.body, internals.borders.downleft.shape
     )
     internals.borders.downright = {
-        body = love.physics.newBody(app.world, 600, 416, "static"),
+        body = love.physics.newBody(self.world, 600, 416, "static"),
         shape = love.physics.newRectangleShape(378, 12),
     }
     internals.borders.downright.fixture = love.physics.newFixture(
@@ -162,7 +194,7 @@ function internals.loadborders()
     )
 
     internals.borders.left = {
-        body = love.physics.newBody(app.world, 6, 211, "static"),
+        body = love.physics.newBody(self.world, 6, 211, "static"),
         shape = love.physics.newRectangleShape(12, 378),
     }
     internals.borders.left.fixture = love.physics.newFixture(
@@ -170,7 +202,7 @@ function internals.loadborders()
     )
 
     internals.borders.right = {
-        body = love.physics.newBody(app.world, 794, 211, "static"),
+        body = love.physics.newBody(self.world, 794, 211, "static"),
         shape = love.physics.newRectangleShape(12, 378),
     }
     internals.borders.right.fixture = love.physics.newFixture(
@@ -182,24 +214,24 @@ end
 
 
 ------------------------------------------------------------------------
-function internals.loadballs()
+function Billiard:loadballs()
     local size = 8
     local bounce = .9
     local mass = .4
     local density = 2
     local massdata
 
-    app.balls.white = {
-        body = love.physics.newBody(app.world, internals.startpos.x, internals.startpos.y, "dynamic"),
+    self.balls.white = {
+        body = love.physics.newBody(self.world, internals.startpos.x, internals.startpos.y, "dynamic"),
         shape = love.physics.newCircleShape(size),
         color = {0xff, 0xff, 0xff},
     }
-    app.balls.white.fixture = love.physics.newFixture(
-        app.balls.white.body, app.balls.white.shape, density
+    self.balls.white.fixture = love.physics.newFixture(
+        self.balls.white.body, self.balls.white.shape, density
     )
-    app.balls.white.body:setMass(mass)
-    app.balls.white.fixture:setUserData "ball"
-    app.balls.white.fixture:setRestitution(bounce)
+    self.balls.white.body:setMass(mass)
+    self.balls.white.fixture:setUserData "ball"
+    self.balls.white.fixture:setRestitution(bounce)
 
     local positions = {
         {x=199, y=211},
@@ -215,33 +247,18 @@ function internals.loadballs()
     }
 
     table.foreachi(positions, function(i, pos)
-        app.balls[i] = {
-            body = love.physics.newBody(app.world, pos.x, pos.y, "dynamic"),
+        self.balls[i] = {
+            body = love.physics.newBody(self.world, pos.x, pos.y, "dynamic"),
             shape = love.physics.newCircleShape(size),
             color = {0xff, 0x20, 0x20},
         }
-        app.balls[i].fixture = love.physics.newFixture(
-            app.balls[i].body, app.balls[i].shape, density
+        self.balls[i].fixture = love.physics.newFixture(
+            self.balls[i].body, self.balls[i].shape, density
         )
-        app.balls.white.body:setMass(mass)
-        app.balls[i].fixture:setUserData "ball"
-        app.balls[i].fixture:setRestitution(bounce)
+        self.balls.white.body:setMass(mass)
+        self.balls[i].fixture:setUserData "ball"
+        self.balls[i].fixture:setRestitution(bounce)
     end)
-end
-
-
-------------------------------------------------------------------------
-function app.shot()
-    if not app.rolling then
-        local force = internals.force * internals.max_force
-        local angle = math.rad((180 + app.rotation) % 360)
-        internals.firsthit = true
-
-        app.balls.white.body:applyForce(
-            math.cos(angle) * force,
-            math.sin(angle) * force
-        )
-    end
 end
 
 
@@ -272,25 +289,14 @@ end
 function internals.calculaterotation()
     local mx, my, bx, by, angle
     mx, my = love.mouse.getPosition()
-    bx, by = app.balls.white.body:getPosition()
+    bx, by = Billiard.balls.white.body:getPosition()
     angle = vector.angleTo(bx - mx, by - my)
     return angle * 180 / math.pi
 end
 
 
 ------------------------------------------------------------------------
-function internals.collision(a, b, coll)
-    local colsig = "ball-touches-border"
-    if a:getUserData() == "ball" and b:getUserData() == "ball" then
-        colsig = nil
-        if internals.firsthit and ((a == app.balls.white.fixture) or (b == app.balls.white.fixture)) then
-            internals.firsthit = false
-            colsig = "white-hit"
-        end
-    end
-    signals.emit("collision", colsig)
-end
 
 
 ------------------------------------------------------------------------
-return app
+return Billiard

@@ -1,11 +1,11 @@
 local gamestate = assert(require "hump.gamestate")
 local signals = assert(require "hump.signal")
 local sounds = assert(require "sounds")
-local app = assert(require "billiard")
+local Billiard = assert(require "billiard")
 local cue = {dist = 0, dir = 6 }
 local shotcount = 0
 local gameover = false
-local board, pointer, font, gameoverfont
+local app, board, pointer, font, gameoverfont
 
 
 local menustate = {}
@@ -33,13 +33,13 @@ end
 
 ------------------------------------------------------------------------
 function mainstate:init()
-    app.init()
+    app = Billiard()
 end
 
 
 ------------------------------------------------------------------------
 function mainstate:update(dt)
-    app.update(dt)
+    app:update(dt)
     if gameover then return end
 
     if love.keyboard.isDown("up") or love.keyboard.isDown("right") then
@@ -94,7 +94,7 @@ function mainstate:draw()
     love.graphics.draw(board, 0, 0)
 
     -- Draw balls
-    app.draw()
+    app:draw()
 
     -- Draw cue
     if not (app.rolling or gameover) then
@@ -111,7 +111,7 @@ function mainstate:draw()
     -- Draw force bar
     love.graphics.setColor(0xff, 0xff, 0xff)
     love.graphics.rectangle("line", 10, 432, 204, 100)
-    app.scaleforce(function(x, r, g, b)
+    app:scaleforce(function(x, r, g, b)
         love.graphics.setColor(r, g, b)
         love.graphics.rectangle("fill", x * 2 + 11, 433, 2, 98)
     end)
