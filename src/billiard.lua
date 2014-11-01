@@ -33,13 +33,24 @@ function Billiard:init()
     self.world = love.physics.newWorld(0, 0)
     self.world:setCallbacks(function(...) self:collision(...) end)
 
-    signals.register("shoot", function(...) self:shot(...) end)
-    signals.register("increase-force", function(...) self:increaseforce(...) end)
-    signals.register("decrease-force", function(...) self:decreaseforce(...) end)
-    signals.register("ball-in-hole", function(...) self:doscore(...) end)
+    self.handlers = {
+        shot = signals.register("shoot", function(...) self:shot(...) end),
+        increase_force = signals.register("increase-force", function(...) self:increaseforce(...) end),
+        decrease_force = signals.register("decrease-force", function(...) self:decreaseforce(...) end),
+        ball_in_hole = signals.register("ball-in-hole", function(...) self:doscore(...) end),
+    }
 
     self:loadborders()
     self:loadballs()
+end
+
+
+------------------------------------------------------------------------
+function Billiard:disconnecthandlers()
+    signals.remove("shoot", self.handlers.shot)
+    signals.remove("increase-force", self.handlers.increase_force)
+    signals.remove("decrease-force", self.handlers.decrease_force)
+    signals.remove("ball-in-hole", self.handlers.ball_in_hole)
 end
 
 
@@ -117,12 +128,12 @@ end
 
 ------------------------------------------------------------------------
 function Billiard:shot()
-    if not Billiard.rolling then
+    if not self.rolling then
         local force = self.force * internals.max_force
-        local angle = math.rad((180 + Billiard.rotation) % 360)
+        local angle = math.rad((180 + self.rotation) % 360)
         self.firsthit = true
 
-        Billiard.balls.white.body:applyForce(
+        self.balls.white.body:applyForce(
             math.cos(angle) * force,
             math.sin(angle) * force
         )
