@@ -1,5 +1,6 @@
 local gamestate = assert(require "hump.gamestate")
 local signals = assert(require "hump.signal")
+local timer = assert(require "hump.timer")
 local sounds = assert(require "sounds")
 local Billiard = assert(require "billiard")
 local cue = {dist = 0, dir = 6 }
@@ -32,6 +33,8 @@ end
 
 
 ------------------------------------------------------------------------
+-- Main state --
+----------------
 function mainstate:enter()
     app = Billiard()
 end
@@ -131,6 +134,8 @@ end
 
 
 ------------------------------------------------------------------------
+-- Menu state --
+----------------
 function menustate:enter()
     if app then app:disconnecthandlers() end
 end
@@ -159,21 +164,60 @@ end
 
 
 ------------------------------------------------------------------------
+-- Pause state --
+-----------------
+function pausestate:enter()
+    self.timer = timer.new()
+    self.alpha = 0
+    self.timer:tween(.5, self, {alpha=1}, "linear")
+end
+
+
+------------------------------------------------------------------------
+function pausestate:leave()
+    self.timer:clear()
+end
+
+
+------------------------------------------------------------------------
 function pausestate:keyreleased(key)
     if key == "p" or key == "escape" then gamestate.pop() end
 end
 
 
 ------------------------------------------------------------------------
+function pausestate:update(dt)
+    self.timer:update(dt)
+end
+
+
+------------------------------------------------------------------------
 function pausestate:draw()
     mainstate:draw()
-    love.graphics.setColor(0x00, 0x00, 0x60, 0xa0)
+    love.graphics.setColor(0x00, 0x00, 0x60, math.floor(0xa0 * self.alpha))
     local width, height = love.window.getDimensions()
     love.graphics.rectangle("fill", 0, 0, width, height)
 
-    love.graphics.setColor(0xff, 0xff, 0x00, 0xff)
+    love.graphics.setColor(0xff, 0xff, 0x00, math.floor(0xff * self.alpha))
     love.graphics.setFont(gameoverfont)
     love.graphics.print("Paused", 312, 166)
+end
+
+
+------------------------------------------------------------------------
+-- Game over state --
+---------------------
+function gameoverstate:enter()
+    self.timer = timer.new()
+    self.tx_game_x = -100
+    self.tx_over_x = love.window.getWidth()
+    self.timer:tween(2, self, {tx_game_x=272, tx_over_x=416}, "out-expo")
+end
+
+
+------------------------------------------------------------------------
+function gameoverstate:leave()
+    self.timer:clear()
 end
 
 
@@ -184,12 +228,19 @@ end
 
 
 ------------------------------------------------------------------------
+function gameoverstate:update(dt)
+    self.timer:update(dt)
+end
+
+
+------------------------------------------------------------------------
 function gameoverstate:draw()
     mainstate:draw()
 
     love.graphics.setColor(0xff, 0x00, 0x00)
     love.graphics.setFont(gameoverfont)
-    love.graphics.print("Game Over", 272, 166)
+    love.graphics.print("Game", self.tx_game_x, 166)
+    love.graphics.print("Over", self.tx_over_x, 166)
     love.graphics.setColor(0xff, 0xff, 0xff)
     love.graphics.draw(cue.img, 390, 432)
 end
