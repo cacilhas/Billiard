@@ -64,27 +64,27 @@ end
 
 ------------------------------------------------------------------------
 function mainstate:keypressed(key, isrepeat)
-    if key == " " and not app.rolling then signals.emit("shoot") end
+    if key == " " and not app.rolling then return signals.emit("shoot") end
 end
 
 
 ------------------------------------------------------------------------
 function mainstate:keyreleased(key)
-    if key == "p" then gamestate.push(pausestate)
-    elseif key == "escape" then gamestate.switch(menustate) end
+    if key == "p" then return gamestate.push(pausestate)
+    elseif key == "escape" then return gamestate.switch(menustate) end
 end
 
 
 ------------------------------------------------------------------------
 function mainstate:mousepressed(x, y, button)
     if button == "l" and not app.rolling then
-        signals.emit("shoot")
+        return signals.emit("shoot")
 
     elseif button == "wu" then
-        signals.emit("increase-force", .0625)
+        return signals.emit("increase-force", .0625)
 
     elseif button == "wd" then
-        signals.emit("decrease-force", .0625)
+        return signals.emit("decrease-force", .0625)
     end
 end
 
@@ -137,14 +137,14 @@ end
 -- Menu state --
 ----------------
 function menustate:enter()
-    if app then app:disconnecthandlers() end
+    if app then return app:disconnecthandlers() end
 end
 
 
 ------------------------------------------------------------------------
 function menustate:keyreleased(key)
-    if key == "return" then gamestate.switch(mainstate)
-    elseif key == "escape" then love.event.quit() end
+    if key == "return" then return gamestate.switch(mainstate)
+    elseif key == "escape" then return love.event.quit() end
 end
 
 
@@ -169,25 +169,25 @@ end
 function pausestate:enter()
     self.timer = timer.new()
     self.alpha = 0
-    self.timer:tween(.5, self, {alpha=1}, "linear")
+    return self.timer:tween(.5, self, {alpha=1}, "linear")
 end
 
 
 ------------------------------------------------------------------------
 function pausestate:leave()
-    self.timer:clear()
+    return self.timer:clear()
 end
 
 
 ------------------------------------------------------------------------
 function pausestate:keyreleased(key)
-    if key == "p" or key == "escape" then gamestate.pop() end
+    if key == "p" or key == "escape" then return gamestate.pop() end
 end
 
 
 ------------------------------------------------------------------------
 function pausestate:update(dt)
-    self.timer:update(dt)
+    return self.timer:update(dt)
 end
 
 
@@ -217,19 +217,19 @@ end
 
 ------------------------------------------------------------------------
 function gameoverstate:leave()
-    self.timer:clear()
+    return self.timer:clear()
 end
 
 
 ------------------------------------------------------------------------
 function gameoverstate:keyreleased(key)
-    if key == "escape" then gamestate.switch(menustate) end
+    if key == "escape" then return gamestate.switch(menustate) end
 end
 
 
 ------------------------------------------------------------------------
 function gameoverstate:update(dt)
-    self.timer:update(dt)
+    return self.timer:update(dt)
 end
 
 

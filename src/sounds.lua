@@ -15,16 +15,16 @@ sounds = {
     end,
 
     shot = function()
-        sounds["cue-hits-ball"]:play()
+        return sounds["cue-hits-ball"]:play()
     end,
 
     score = function()
-        sounds["ball-in-hole"]:play()
+        return sounds["ball-in-hole"]:play()
     end,
 
     collision = function(coltype)
         local sound = sounds[coltype] or sounds["ball-hits-ball"]
-        sound:play()
+        return sound:play()
     end,
 }
 
