@@ -61,12 +61,12 @@ function Billiard:update(dt)
 
     self.rolling = false
     local survivors = {}
-    table.foreach(self.balls, function(name, ball)
+    for name, ball in pairs(self.balls) do
         if ball.body:isAwake() then self:applyfriction(ball, dt) end
         local x, y = ball.body:getPosition()
         if internals.ishole(x, y) then signals.emit("ball-in-hole", ball) end
         if ball.fixture then survivors[name] = ball end
-    end)
+    end
     self.balls = survivors
     if table.maxn(survivors) == 0 then signals.emit("game-over") end
     if self.firsthit and not self.rolling then
@@ -78,11 +78,11 @@ end
 
 ------------------------------------------------------------------------
 function Billiard:draw()
-    table.foreach(self.balls, function(_, ball)
+    for _, ball in pairs(self.balls) do
         local x, y = ball.body:getPosition()
         love.graphics.setColor(ball.color)
         love.graphics.circle("fill", x, y, ball.shape:getRadius())
-    end)
+    end
 end
 
 
@@ -117,8 +117,8 @@ end
 
 ------------------------------------------------------------------------
 function Billiard:scaleforce(f)
-    local x, b, r
     for x = 0, math.ceil(self.force) do
+        local b, r
         b = 255 * (100 - x) / 100
         r = 255 * x / 100
         f(x, r, 0, b)
@@ -257,7 +257,7 @@ function Billiard:loadballs()
         {x=160, y=229},
     }
 
-    table.foreachi(positions, function(i, pos)
+    for i, pos in ipairs(positions) do
         self.balls[i] = {
             body = love.physics.newBody(self.world, pos.x, pos.y, "dynamic"),
             shape = love.physics.newCircleShape(size),
@@ -269,7 +269,7 @@ function Billiard:loadballs()
         self.balls.white.body:setMass(mass)
         self.balls[i].fixture:setUserData "ball"
         self.balls[i].fixture:setRestitution(bounce)
-    end)
+    end
 end
 
 
