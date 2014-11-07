@@ -37,6 +37,7 @@ end
 ----------------
 function mainstate:enter()
     app = Billiard()
+    shotcount = 0
 end
 
 
