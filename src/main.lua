@@ -5,7 +5,7 @@ local sounds = assert(require "sounds")
 local Billiard = assert(require "billiard")
 local cue = {dist = 0, dir = 6 }
 local shotcount = 0
-local app, board, pointer, font, gameoverfont
+local app, board, floor, pointer, font, gameoverfont
 
 
 local menustate = {}
@@ -17,6 +17,7 @@ local gameoverstate = {}
 ------------------------------------------------------------------------
 function love.load()
     love.mouse.setVisible(false)
+    floor = love.graphics.newImage("images/floor.jpg")
     board = love.graphics.newImage("images/board.jpg")
     cue.img = love.graphics.newImage("images/cue.png")
     pointer = love.graphics.newImage("images/pointer.png")
@@ -152,11 +153,13 @@ end
 ------------------------------------------------------------------------
 function menustate:draw()
     love.graphics.setColor(0xff, 0xff, 0xff)
+    love.graphics.draw(floor, 0, 0)
     love.graphics.draw(board, 150, 0, math.rad(20), .8, .8)
 
     love.graphics.setColor(0xff, 0xff, 0x00)
     love.graphics.setFont(gameoverfont)
-    love.graphics.print("Billiard", 300, 166)
+    love.graphics.print("Billiar", 320, 166)
+    love.graphics.print("d", 452, 166)
 
     love.graphics.setColor(0xff, 0xff, 0xff)
     love.graphics.setFont(font)
