@@ -160,15 +160,17 @@ end
 ------------------------------------------------------------------------
 -- Pause state --
 -----------------
-function pausestate:enter()
+function pausestate:enter(previous)
   self.timer = timer.new()
   self.alpha = 0
+  self.previous = previous
   return self.timer:tween(.5, self, {alpha=1}, "linear")
 end
 
 
 ------------------------------------------------------------------------
 function pausestate:leave()
+  self.previous = nil
   return self.timer:clear()
 end
 
@@ -187,7 +189,7 @@ end
 
 ------------------------------------------------------------------------
 function pausestate:draw()
-  mainstate:draw()
+  if self.previous then self.previous:draw() end
   love.graphics.setColor(0x00, 0x00, 0x60, math.floor(0xa0 * self.alpha))
   local width, height = love.window.getDimensions()
   love.graphics.rectangle("fill", 0, 0, width, height)
@@ -201,7 +203,8 @@ end
 ------------------------------------------------------------------------
 -- Game over state --
 ---------------------
-function gameoverstate:enter()
+function gameoverstate:enter(previous)
+  self.previous = previous
   self.timer = timer.new()
   self.tx_game_x = -100
   self.tx_over_x = love.window.getWidth()
@@ -211,6 +214,7 @@ end
 
 ------------------------------------------------------------------------
 function gameoverstate:leave()
+  self.previous = nil
   return self.timer:clear()
 end
 
@@ -229,8 +233,7 @@ end
 
 ------------------------------------------------------------------------
 function gameoverstate:draw()
-  mainstate:draw()
-
+  if self.previous then self.previous:draw() end
   love.graphics.setColor(0xff, 0x00, 0x00)
   love.graphics.setFont(gameoverfont)
   love.graphics.print("Game", self.tx_game_x, 166)
