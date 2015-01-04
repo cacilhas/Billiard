@@ -11,4 +11,5 @@
 .DS_Store
 .env
 .idea
+/src/hump
 tmp
