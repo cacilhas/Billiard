@@ -12,4 +12,5 @@
 .env
 .idea
 /src/hump
+/src/*.lua
 tmp
