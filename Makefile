@@ -3,7 +3,7 @@
 #----------------#
 
 PROJECT_NAME= Billiard
-ICON= Billiard.icns
+ICON= $(PROJECT_NAME).icns
 
 
 #----------------------#
@@ -11,9 +11,12 @@ ICON= Billiard.icns
 #----------------------#
 
 TARGET= $(PROJECT_NAME).love
+SRC= $(wildcard src/*.moon)
+LUACODE= $(SRC:.moon=.lua)
 ZIP= zip
 AR= tar cf -
 COMPRESS= xz -c
+CC= moonc
 RM= rm -rf
 
 ifeq ($(OS),Windows_NT)
@@ -75,9 +78,13 @@ endif
 endif
 
 
+%.lua: %.moon
+	$(CC) $<
+
+
 .PHONY: clean
 clean:
-	$(RM) $(TARGET) $(APP)
+	$(RM) $(TARGET) $(APP) $(LUACODE)
 
 
 .PHONY: mrproper
@@ -85,11 +92,11 @@ mrproper: clean
 	$(RM) $(DIST)
 
 
-test:
+test: $(LUACODE)
 	$(LOVE) src
 
 
-$(TARGET):
+$(TARGET): $(LUACODE)
 ifeq ($(UNAME),Windows)
 	CHDIR src ; $(ZIP) ..\$@ -r *
 else
