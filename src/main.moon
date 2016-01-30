@@ -1,3 +1,5 @@
+local *
+
 gamestate = assert require "hump.gamestate"
 signals = assert require "hump.signal"
 timer = assert require "hump.timer"
@@ -11,8 +13,12 @@ cue =
     dir: 6
 
 shotcount = 0
-local app, board, splash, pointer, font, gameoverfont
-local menustate, mainstate, pausestate, gameoverstate
+app = nil
+board = nil
+splash = nil
+font = nil
+pointer = nil
+gameoverfont = nil
 
 
 --------------------------------------------------------------------------------
@@ -66,13 +72,14 @@ mainstate =
                 gamestate.switch menustate
 
     mousepressed: (x, y, button) =>
-        switch button
-            when "l"
+        if button == 1
                 signals.emit "shoot" unless app.rolling
-            when "wd"
-                signals.emit "increase-force", .0625
-            when "wu"
-                signals.emit "decrease-force", .0625
+
+    wheelmoved: (x, y) =>
+        if y < 0
+            signals.emit "increase-force", -.1 * y
+        elseif y > 0
+            signals.emit "decrease-force", .1 * y
 
     draw: =>
         with love.graphics

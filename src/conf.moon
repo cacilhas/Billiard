@@ -1,5 +1,5 @@
 love.conf= (t) ->
-    t.version = "0.9.1"
+    t.version = "0.10.0"
     t.identity = "billiard"
     with t.window
         .title = "Billiard"
