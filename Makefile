@@ -13,13 +13,13 @@ ICON= $(PROJECT_NAME).icns
 TARGET= $(PROJECT_NAME).love
 SRC= $(wildcard src/*.moon)
 LUACODE= $(SRC:.moon=.lua)
-ZIP= zip
 AR= tar cf -
 COMPRESS= xz -c
 CC= moonc
 RM= rm -rf
 
 ifeq ($(OS),Windows_NT)
+	ZIP= zip
 	UNAME= Windows
 	APP= $(PROJECT_NAME).exe
 	DIST= $(PROJECT_NAME).zip
@@ -28,6 +28,7 @@ ifeq ($(OS),Windows_NT)
 	MV= MOVE
 
 else
+	ZIP= zip -9 -q
 	UNAME= $(shell uname -s)
 	DIST= $(PROJECT_NAME).txz
 	CP= cp
