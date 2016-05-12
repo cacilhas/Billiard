@@ -154,7 +154,7 @@ pausestate =
         @previous\draw! if @previous
         with love.graphics
             .setColor 0x00, 0x00, 0x60, floor 0xa0 * @alpha
-            width, height = love.window.getDimensions!
+            width, height = .getDimensions!
             .rectangle "fill", 0, 0, width, height
 
             .setColor 0xff, 0xff, 0xff, floor 0xa0 * @alpha
