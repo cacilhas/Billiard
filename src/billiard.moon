@@ -69,9 +69,8 @@ class Billiard
         @\loadballs!
 
     disconnecthandlers: =>
-        for name, handler in pairs @handlers
-            name = name\gsub "_", "-"
-            signals.remove name, handlers
+        -- TODO: why is this failing?
+        pcall signals.remove, (name\gsub "_", "-"), handlers for name, handler in pairs @handlers
 
     update: (dt) =>
         @world\update dt
