@@ -46,7 +46,7 @@ class Billiard
     @_VERSION: "1.0"
     @_DESCRIPTION: "Billiard"
     @_AUTHOR: "ℜodrigo ℭacilhας <batalema@cacilhas.info>"
-    @_URL: "https://bitbucket.org/cacilhas/billiard/"
+    @_URL: "https://github.com/cacilhas/Billiard"
     @_LICENSE: "BSD-3 Clausule"
 
     balls: {}
@@ -84,7 +84,7 @@ class Billiard
             signals.emit "ball-in-hole", ball if internals.ishole x, y
             survivors[name] = ball if ball.fixture
         @balls = survivors
-        
+
         signals.emit "game-over" if (maxn survivors) == 0
         if @firsthit and not @rolling
             @score = max 0, @score - 1
